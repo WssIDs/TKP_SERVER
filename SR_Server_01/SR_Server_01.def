@@ -1,0 +1,11 @@
+;
+; SR_Server_01.def : Declares the module parameters for the DLL.
+;
+ 
+LIBRARY "SR_Server_01"
+;DESCRIPTION  'SERVER Windows Dynamic Link Library'
+ 
+EXPORTS
+    ; Имена точек входа для внешнего пользования помещаются здесь
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
