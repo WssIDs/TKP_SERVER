@@ -24,12 +24,18 @@
     <ClInclude Include="IVer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Registry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SR_Server_01.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CFN_01.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Registry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
