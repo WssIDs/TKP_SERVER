@@ -1,13 +1,14 @@
 #pragma once
 
 
-#include "IÑustomFun.h"
+#include "IFN_01.h"
+#include "IVer.h"
 
 extern long g_lObjs;
 extern long g_lLocks;
 
 
-class CCustomFun : public ICustomFun
+class CFN_01 : public IFN_01, public IVer
 {
 protected:
 
@@ -15,8 +16,8 @@ protected:
 	long          m_lRef;
 
 public:
-	CCustomFun();
-	~CCustomFun();
+	CFN_01();
+	~CFN_01();
 
 public:
 
@@ -25,23 +26,25 @@ public:
 	STDMETHOD_(ULONG, AddRef());
 	STDMETHOD_(ULONG, Release());
 
-
-	//ICustomFun
+	// IFN_01
 	STDMETHOD(Fun11(int, int, int*));
 	STDMETHOD(Fun12(int, int, int, float*));
 	STDMETHOD(Fun13(double in, double *out));
 
+	// IVer
+	STDMETHOD(GetAutor(wchar_t** author));
+
 };
 
 
-class CustomFunClassFactory : public IClassFactory
+class FN_01ClassFactory : public IClassFactory
 {
 protected:
 	long       m_lRef;
 
 public:
-	CustomFunClassFactory();
-	~CustomFunClassFactory();
+	FN_01ClassFactory();
+	~FN_01ClassFactory();
 
 	// IUnknown
 	STDMETHOD(QueryInterface(REFIID, void**));

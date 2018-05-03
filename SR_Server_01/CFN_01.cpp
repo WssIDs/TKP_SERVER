@@ -1,7 +1,8 @@
 #include <windows.h>
-#include "CCustomFun.h"
+#include <tchar.h>
+#include "CFN_01.h"
 
-CCustomFun::CCustomFun()
+CFN_01::CFN_01()
 {
 	m_lRef = 0;
 
@@ -10,7 +11,7 @@ CCustomFun::CCustomFun()
 }
 
 
-CCustomFun::~CCustomFun()
+CFN_01::~CFN_01()
 {
 	// Уменьшить значение внешнего счетчика объектов
 	InterlockedDecrement(&g_lObjs);
@@ -18,26 +19,33 @@ CCustomFun::~CCustomFun()
 
 }
 
-
-STDMETHODIMP CCustomFun::Fun11(int iOp1, int iOp2, int* pResult)
+STDMETHODIMP CFN_01::Fun11(int iOp1, int iOp2, int* pResult)
 {
 	*pResult = iOp1 - iOp2;
 	return S_OK;
 }
 
-STDMETHODIMP CCustomFun::Fun12(int iOp1, int iOp2, int iOp3, float* pResult)
+STDMETHODIMP CFN_01::Fun12(int iOp1, int iOp2, int iOp3, float* pResult)
 {
 	*pResult = (float)iOp1 + (float)iOp2 + (float)iOp3;
 	return S_OK;
 }
 
-STDMETHODIMP CCustomFun::Fun13(double in, double *out)
+STDMETHODIMP CFN_01::Fun13(double in, double *out)
 {
 	*out = in * in;
 	return S_OK;
 }
 
-STDMETHODIMP_(ULONG) CCustomFun::Release()
+STDMETHODIMP CFN_01::GetAutor(wchar_t** author)
+{
+	wchar_t text[] = L"Volodko 60331-1";
+	lstrcpy(*author, text);
+
+	return S_OK;
+}
+
+STDMETHODIMP_(ULONG) CFN_01::Release()
 {
 	if (InterlockedDecrement(&m_lRef) == 0)
 	{
@@ -48,17 +56,26 @@ STDMETHODIMP_(ULONG) CCustomFun::Release()
 	return m_lRef;
 }
 
-STDMETHODIMP_(ULONG) CCustomFun::AddRef()
+STDMETHODIMP_(ULONG) CFN_01::AddRef()
 {
 	return InterlockedIncrement(&m_lRef);
 }
 
-STDMETHODIMP CCustomFun::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CFN_01::QueryInterface(REFIID riid, void** ppv)
 {
 	*ppv = 0;
 
-	if (riid == IID_IUnknown || riid == IID_ICustomFun)
-		*ppv = this;
+
+	if (riid == IID_IUnknown || riid == IID_IFN_01)
+	{
+		// Клиент запрашивает интерфейс IFN_01
+		*ppv = (IFN_01*)this;
+	}
+	else if (riid == IID_IVer)
+	{
+		// Клиент запрашивает интерфейс IVer
+		*ppv = (IVer*)this;
+	}   
 
 	if (*ppv)
 	{
@@ -69,18 +86,18 @@ STDMETHODIMP CCustomFun::QueryInterface(REFIID riid, void** ppv)
 }
 
 
-/* MathClasFactory  реализация */
+/* FNClassFactory  реализация */
 
-CustomFunClassFactory::CustomFunClassFactory()
+FN_01ClassFactory::FN_01ClassFactory()
 {
 	m_lRef = 0;
 }
 
-CustomFunClassFactory::~CustomFunClassFactory()
+FN_01ClassFactory::~FN_01ClassFactory()
 {
 }
 
-STDMETHODIMP CustomFunClassFactory::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP FN_01ClassFactory::QueryInterface(REFIID riid, void** ppv)
 {
 	*ppv = 0;
 
@@ -96,12 +113,12 @@ STDMETHODIMP CustomFunClassFactory::QueryInterface(REFIID riid, void** ppv)
 	return(E_NOINTERFACE);
 }
 
-STDMETHODIMP_(ULONG) CustomFunClassFactory::AddRef()
+STDMETHODIMP_(ULONG) FN_01ClassFactory::AddRef()
 {
 	return InterlockedIncrement(&m_lRef);
 }
 
-STDMETHODIMP_(ULONG) CustomFunClassFactory::Release()
+STDMETHODIMP_(ULONG) FN_01ClassFactory::Release()
 {
 	if (InterlockedDecrement(&m_lRef) == 0)
 	{
@@ -112,15 +129,15 @@ STDMETHODIMP_(ULONG) CustomFunClassFactory::Release()
 	return m_lRef;
 }
 
-STDMETHODIMP CustomFunClassFactory::CreateInstance
+STDMETHODIMP FN_01ClassFactory::CreateInstance
 (LPUNKNOWN pUnkOuter, REFIID riid, void** ppvObj)
 {
-	CCustomFun*      pCFun;
+	CFN_01*      pCFun;
 	HRESULT    hr;
 
 	*ppvObj = 0;
 
-	pCFun = new CCustomFun;
+	pCFun = new CFN_01;
 
 	if (pCFun == 0)
 		return(E_OUTOFMEMORY);
@@ -133,7 +150,7 @@ STDMETHODIMP CustomFunClassFactory::CreateInstance
 	return hr;
 }
 
-STDMETHODIMP CustomFunClassFactory::LockServer(BOOL fLock)
+STDMETHODIMP FN_01ClassFactory::LockServer(BOOL fLock)
 {
 	if (fLock)
 		InterlockedIncrement(&g_lLocks);

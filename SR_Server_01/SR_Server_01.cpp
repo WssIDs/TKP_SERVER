@@ -5,7 +5,7 @@
 #include <windows.h>
 
 #include <initguid.h>
-#include "CCustomFun.h"
+#include "CFN_01.h"
 
 long    g_lObjs = 0;
 long    g_lLocks = 0;
@@ -13,15 +13,15 @@ long    g_lLocks = 0;
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
 {
 	HRESULT             hr;
-	CustomFunClassFactory    *pCF;
+	FN_01ClassFactory    *pCF;
 
 	pCF = 0;
 
 	// Make sure the CLSID is for our Expression component
-	if (rclsid != CLSID_CCustomFun)
+	if (rclsid != CLSID_CFN_01)
 		return(E_FAIL);
 
-	pCF = new CustomFunClassFactory;
+	pCF = new FN_01ClassFactory;
 
 	if (pCF == 0)
 		return(E_OUTOFMEMORY);

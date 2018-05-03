@@ -15,18 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IСustomFun.h">
+    <ClInclude Include="IFN_01.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CCustomFun.h">
+    <ClInclude Include="CFN_01.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IVer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CCustomFun.cpp">
+    <ClCompile Include="SR_Server_01.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SR_Server_01.cpp">
+    <ClCompile Include="CFN_01.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

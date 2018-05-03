@@ -143,11 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CCustomFun.h" />
-    <ClInclude Include="IСustomFun.h" />
+    <ClInclude Include="CFN_01.h" />
+    <ClInclude Include="IFN_01.h" />
+    <ClInclude Include="IVer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CCustomFun.cpp" />
+    <ClCompile Include="CFN_01.cpp" />
     <ClCompile Include="SR_Server_01.cpp" />
   </ItemGroup>
   <ItemGroup>
