@@ -3,7 +3,7 @@
 //
 
 #include <windows.h>
-
+#include <tchar.h>
 #include <initguid.h>
 #include "CFN_01.h"
 #include "Registry.h"
@@ -21,11 +21,11 @@ long    g_lLocks = 0;
 static HMODULE g_hModule = NULL;  // DLL module handle
 								  // Friendly name of component
 
-const char g_szFriendlyName[] = "Lab1 FN_01 Component";
+LPCTSTR  g_szFriendlyName = TEXT("Lab1 FN_01 Component");
 // Version-independent ProgID
-const char g_szVerIndProgID[] = "FN_01.Component";
+LPCTSTR  g_szVerIndProgID = TEXT("FN_01.Component");
 // ProgID
-const char g_szProgID[] = "FN_01.Component.1";
+LPCTSTR  g_szProgID = TEXT("FN_01.Component.1");
 
 
 
@@ -85,5 +85,20 @@ STDAPI DllUnregisterServer()
 	return UnregisterServer(CLSID_CFN_01,
 		g_szVerIndProgID,
 		g_szProgID);
+}
+
+///////////////////////////////////////////////////////////
+//
+// DLL module information
+//
+BOOL APIENTRY DllMain(HANDLE hModule,
+	DWORD dwReason,
+	void* lpReserved)
+{
+	if (dwReason == DLL_PROCESS_ATTACH)
+	{
+		g_hModule = (HMODULE)hModule;
+	}
+	return TRUE;
 }
 

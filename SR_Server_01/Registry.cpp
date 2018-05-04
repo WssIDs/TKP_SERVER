@@ -4,7 +4,8 @@
 
 #include <objbase.h>
 #include <assert.h>
-
+#include <tchar.h>
+#include <stdio.h>
 #include "Registry.h"
 
 ////////////////////////////////////////////////////////
@@ -13,17 +14,12 @@
 //
 
 // Set the given key and its value.
-BOOL setKeyAndValue(const char* pszPath,
-	const char* szSubkey,
-	const char* szValue);
-
-// Convert a CLSID into a char string.
-void CLSIDtochar(const CLSID& clsid,
-	char* szCLSID,
-	int length);
+BOOL setKeyAndValue(const wchar_t* szKey,
+	const wchar_t* szSubkey,
+	const wchar_t* szValue);
 
 // Delete szKeyChild and all of its descendents.
-LONG recursiveDeleteKey(HKEY hKeyParent, const char* szKeyChild);
+LONG recursiveDeleteKey(HKEY hKeyParent,const wchar_t* szKeyChild);
 
 ////////////////////////////////////////////////////////
 //
@@ -41,74 +37,64 @@ const int CLSID_STRING_SIZE = 39;
 //
 // Register the component in the registry.
 //
-HRESULT RegisterServer(HMODULE hModule,            // DLL module handle
-	const CLSID& clsid,         // Class ID
-	const char* szFriendlyName, // Friendly Name
-	const char* szVerIndProgID, // Programmatic
-	const char* szProgID)       //   IDs
+HRESULT RegisterServer(HMODULE hModule, const CLSID& clsid,const wchar_t* szFriendlyName,const wchar_t* szVerIndProgID,const wchar_t* szProgID)
 {
-
 	// Get server location.
-	char szModule[512];
-
-	wchar_t szModuleW[4096] = { 0 };
-	MultiByteToWideChar(0, 0, szModule, strlen(szModule), szModuleW, strlen(szModule));
+	wchar_t* szModule = new wchar_t[512];
 
 	DWORD dwResult =
 		::GetModuleFileName(hModule,
-			szModuleW,
-			sizeof(szModule) / sizeof(char));
+			szModule,
+			_tcslen(szModule) * sizeof(TCHAR));
+	
 	assert(dwResult != 0);
 
-	// Convert the CLSID into a char.
-	char szCLSID[CLSID_STRING_SIZE];
-	CLSIDtochar(clsid, szCLSID, sizeof(szCLSID));
+	wchar_t* szCLSID = new wchar_t[CLSID_STRING_SIZE];
+
+	StringFromCLSID(clsid, &szCLSID);
 
 	// Build the key CLSID\\{...}
-	char szKey[64];
-	strcpy(szKey, "CLSID\\");
-	strcat(szKey, szCLSID);
+	wchar_t* szKey = new wchar_t[1024];
+	wcscpy(szKey, L"CLSID\\");
+
+	wcscat(szKey, szCLSID);
 
 	// Add the CLSID to the registry.
 	setKeyAndValue(szKey, NULL, szFriendlyName);
 
 	// Add the server filename subkey under the CLSID key.
-	setKeyAndValue(szKey, "InprocServer32", szModule);
+	setKeyAndValue(szKey, L"InprocServer32", szModule);
 
 	// Add the ProgID subkey under the CLSID key.
-	setKeyAndValue(szKey, "ProgID", szProgID);
+	setKeyAndValue(szKey, L"ProgID", szProgID);
 
 	// Add the version-independent ProgID subkey under CLSID key.
-	setKeyAndValue(szKey, "VersionIndependentProgID",
-		szVerIndProgID);
+	setKeyAndValue(szKey, L"VersionIndependentProgID", szVerIndProgID);
 
 	// Add the version-independent ProgID subkey under HKEY_CLASSES_ROOT.
 	setKeyAndValue(szVerIndProgID, NULL, szFriendlyName);
-	setKeyAndValue(szVerIndProgID, "CLSID", szCLSID);
-	setKeyAndValue(szVerIndProgID, "CurVer", szProgID);
+
+	setKeyAndValue(szVerIndProgID, L"CLSID", szCLSID);
+	setKeyAndValue(szVerIndProgID, L"CurVer", szProgID);
 
 	// Add the versioned ProgID subkey under HKEY_CLASSES_ROOT.
 	setKeyAndValue(szProgID, NULL, szFriendlyName);
-	setKeyAndValue(szProgID, "CLSID", szCLSID);
+	setKeyAndValue(szProgID, L"CLSID", szCLSID);
 
 	return S_OK;
 }
 
-//
-// Remove the component from the registry.
-//
-LONG UnregisterServer(const CLSID& clsid,         // Class ID
-	const char* szVerIndProgID, // Programmatic
-	const char* szProgID)       //   IDs
+HRESULT UnregisterServer(const CLSID& clsid, const wchar_t* szVerIndProgID,const wchar_t* szProgID)
 {
 	// Convert the CLSID into a char.
-	char szCLSID[CLSID_STRING_SIZE];
-	CLSIDtochar(clsid, szCLSID, sizeof(szCLSID));
+	wchar_t* szCLSID = new wchar_t[CLSID_STRING_SIZE];
+
+	StringFromCLSID(clsid, &szCLSID);
 
 	// Build the key CLSID\\{...}
-	char szKey[64];
-	strcpy(szKey, "CLSID\\");
-	strcat(szKey, szCLSID);
+	wchar_t* szKey = new wchar_t[64];
+	wcscpy(szKey, L"CLSID\\");
+	wcscat(szKey, szCLSID);
 
 	// Delete the CLSID Key - CLSID\{...}
 	LONG lResult = recursiveDeleteKey(HKEY_CLASSES_ROOT, szKey);
@@ -128,42 +114,15 @@ LONG UnregisterServer(const CLSID& clsid,         // Class ID
 	return S_OK;
 }
 
-///////////////////////////////////////////////////////////
-//
-// Internal helper functions
-//
-
-// Convert a CLSID to a char string.
-void CLSIDtochar(const CLSID& clsid,
-	char* szCLSID,
-	int length)
-{
-	assert(length >= CLSID_STRING_SIZE);
-	// Get CLSID
-	LPOLESTR wszCLSID = NULL;
-	HRESULT hr = StringFromCLSID(clsid, &wszCLSID);
-	assert(SUCCEEDED(hr));
-
-	// Covert from wide characters to non-wide.
-	wcstombs(szCLSID, wszCLSID, length);
-
-	// Free memory.
-	CoTaskMemFree(wszCLSID);
-}
-
 //
 // Delete a key and all of its descendents.
 //
 LONG recursiveDeleteKey(HKEY hKeyParent,           // Parent of key to delete
-	const char* lpszKeyChild)  // Key to delete
+	const wchar_t* lpszKeyChild)  // Key to delete
 {
-
-	wchar_t lpszKeyChildW[4096] = { 0 };
-	MultiByteToWideChar(0, 0, lpszKeyChild, strlen(lpszKeyChild), lpszKeyChildW, strlen(lpszKeyChild));
-
 	// Open the child.
 	HKEY hKeyChild;
-	LONG lRes = RegOpenKeyEx(hKeyParent, lpszKeyChildW, 0,
+	LONG lRes = RegOpenKeyEx(hKeyParent, lpszKeyChild, 0,
 		KEY_ALL_ACCESS, &hKeyChild);
 	if (lRes != ERROR_SUCCESS)
 	{
@@ -172,13 +131,10 @@ LONG recursiveDeleteKey(HKEY hKeyParent,           // Parent of key to delete
 
 	// Enumerate all of the decendents of this child.
 	FILETIME time;
-	char szBuffer[256];
+	TCHAR szBuffer[256];
 	DWORD dwSize = 256;
 
-	wchar_t szBufferW[4096] = { 0 };
-	MultiByteToWideChar(0, 0, szBuffer, strlen(szBuffer), szBufferW, strlen(szBuffer));
-
-	while (RegEnumKeyEx(hKeyChild, 0, szBufferW, &dwSize, NULL,
+	while (RegEnumKeyEx(hKeyChild, 0, szBuffer, &dwSize, NULL,
 		NULL, NULL, &time) == S_OK)
 	{
 		// Delete the decendents of this child.
@@ -195,11 +151,8 @@ LONG recursiveDeleteKey(HKEY hKeyParent,           // Parent of key to delete
 	// Close the child.
 	RegCloseKey(hKeyChild);
 
-	wchar_t lpszKeyChildW2[4096] = { 0 };
-	MultiByteToWideChar(0, 0, lpszKeyChild, strlen(lpszKeyChild), lpszKeyChildW2, strlen(lpszKeyChild));
-
 	// Delete this child.
-	return RegDeleteKey(hKeyParent, lpszKeyChildW2);
+	return RegDeleteKey(hKeyParent, lpszKeyChild);
 }
 
 //
@@ -207,29 +160,26 @@ LONG recursiveDeleteKey(HKEY hKeyParent,           // Parent of key to delete
 //   - This helper function was borrowed and modifed from
 //     Kraig Brockschmidt's book Inside OLE.
 //
-BOOL setKeyAndValue(const char* szKey,
-	const char* szSubkey,
-	const char* szValue)
+BOOL setKeyAndValue(const wchar_t* szKey,
+	const wchar_t* szSubkey,
+	const wchar_t* szValue)
 {
 	HKEY hKey;
-	char szKeyBuf[1024];
+	wchar_t* szKeyBuf= new wchar_t[1024];
 
 	// Copy keyname into buffer.
-	strcpy(szKeyBuf, szKey);
+	wcscpy(szKeyBuf, szKey);
 
 	// Add subkey name to buffer.
 	if (szSubkey != NULL)
 	{
-		strcat(szKeyBuf, "\\");
-		strcat(szKeyBuf, szSubkey);
+		wcscat(szKeyBuf, TEXT("\\"));
+		wcscat(szKeyBuf, szSubkey);
 	}
-
-	wchar_t filename[4096] = { 0 };
-	MultiByteToWideChar(0, 0, szKeyBuf, strlen(szKeyBuf), filename, strlen(szKeyBuf));
 
 	// Create and open key and subkey.
 	long lResult = RegCreateKeyEx(HKEY_CLASSES_ROOT,
-		filename,
+		szKeyBuf,
 		0, NULL, REG_OPTION_NON_VOLATILE,
 		KEY_ALL_ACCESS, NULL,
 		&hKey, NULL);
@@ -242,8 +192,8 @@ BOOL setKeyAndValue(const char* szKey,
 	if (szValue != NULL)
 	{
 		RegSetValueEx(hKey, NULL, 0, REG_SZ,
-			(BYTE *)szValue,
-			strlen(szValue) + 1);
+			(BYTE*)szValue,
+			_tcslen(szValue) * sizeof(TCHAR));
 	}
 
 	RegCloseKey(hKey);
